@@ -3,7 +3,6 @@
  * Must precede any system header includes to expose getline().
  */
 #define _POSIX_C_SOURCE 200809L
-
 #include <arpa/inet.h>  /* inet_ntop(), INET_ADDRSTRLEN */
 #include <netinet/in.h> /* struct in_addr, AF_INET */
 #include <stddef.h>     /* size_t */
@@ -11,11 +10,47 @@
 #include <stdio.h>      /* fopen(), getline(), sscanf(), printf(), perror() */
 #include <stdlib.h>     /* free(), EXIT_SUCCESS */
 #include <sys/socket.h> /* Socket domain constants */
+#include <sys/types.h>
 
 /*
  * Holds the parsed fields from a /proc/net/tcp record.
  * IP addresses and connection states are stored as 32-bit hex values.
  */
+
+/*
+ * Translates numeric TCP states into standard human-readable labels.
+ */
+const char *tcp_state_to_str(uint32_t state) {
+  switch (state) {
+  case 0x01:
+    return "ESTABLISHED";
+  case 0x02:
+    return "SYN_SENT";
+  case 0x03:
+    return "SYN_RECV";
+  case 0x04:
+    return "FIN_WAIT1";
+  case 0x05:
+    return "FIN_WAIT2";
+  case 0x06:
+    return "TIME_WAIT";
+  case 0x07:
+    return "CLOSE";
+  case 0x08:
+    return "CLOSE_WAIT";
+  case 0x09:
+    return "LAST_ACK";
+  case 0x0A:
+    return "LISTEN";
+  case 0x0B:
+    return "CLOSING";
+  case 0x0C:
+    return "NEW_SYNC_RECV";
+  default:
+    return "UNKNOWN";
+  }
+}
+
 struct TcpConnection {
   uint32_t local_ip_hex; /* Local IPv4 address in hex format (little-endian on
                             x86/ARM) */
@@ -60,7 +95,8 @@ int main(int argc, char *argv[]) {
        * (e.g., "   0:")
        * - %X:%X    Extracts local IP (hex) and local port (hex) separated by
        * ':'
-       * - %X:%X    Extracts remote IP (hex) and remote port (hex) separated by
+       * - %X:%X    Extracts remote IP (hex) and remote port (hex) separated
+       * by
        * ':'
        * - %X       Extracts the connection state code (hex)
        */
@@ -73,13 +109,13 @@ int main(int argc, char *argv[]) {
         /*
          * in_addr wraps a single 32-bit uint32_t (s_addr).
          * On little-endian architectures, reading the raw hex integer from
-         * /proc produces the exact byte layout required by network presentation
-         * utilities.
+         * /proc produces the exact byte layout required by network
+         * presentation utilities.
          */
         struct in_addr addr;          // local ip
         struct in_addr addr_dest;     // remote ip
-        char ip_str[INET_ADDRSTRLEN]; /* 16-byte buffer for IPv4 dotted-decimal
-                                         string */
+        char ip_str[INET_ADDRSTRLEN]; /* 16-byte buffer for IPv4
+                                         dotted-decimal string */
         char ip_str_dest[INET_ADDRSTRLEN];
         addr.s_addr = conn.local_ip_hex;
         addr_dest.s_addr = conn.rem_ip_hex;
@@ -94,9 +130,11 @@ int main(int argc, char *argv[]) {
         // ip dest
         inet_ntop(AF_INET, &addr_dest, ip_str_dest, INET_ADDRSTRLEN);
 
+        // the "-5" is used to tabulate by 5 characters
         /* Print the connection details */
-        printf("Local: %s:%u -> Remote: %s:%u (State: 0x%X)\n", ip_str,
-               conn.local_port, ip_str_dest, conn.rem_port, conn.state);
+        printf("Local: %s:%-5u -> Remote: %s:%-5u [%s]\n", ip_str,
+               conn.local_port, ip_str_dest, conn.rem_port,
+               tcp_state_to_str(conn.state));
       }
     }
   }
