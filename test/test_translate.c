@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
          * /proc produces the exact byte layout required by network presentation
          * utilities.
          */
-        struct in_addr addr;
-        struct in_addr addr_dest;
+        struct in_addr addr;          // local ip
+        struct in_addr addr_dest;     // remote ip
         char ip_str[INET_ADDRSTRLEN]; /* 16-byte buffer for IPv4 dotted-decimal
                                          string */
         char ip_str_dest[INET_ADDRSTRLEN];
@@ -88,12 +88,15 @@ int main(int argc, char *argv[]) {
          * address to a standard null-terminated dotted-decimal string
          * ("xxx.xxx.xxx.xxx").
          */
+
+        // ip source
         inet_ntop(AF_INET, &addr, ip_str, INET_ADDRSTRLEN);
+        // ip dest
         inet_ntop(AF_INET, &addr_dest, ip_str_dest, INET_ADDRSTRLEN);
 
         /* Print the connection details */
-        printf("Local: %s:%u -> Remote IP: %s Remote Port: %u (State: 0x%X)\n",
-               ip_str, conn.local_port, ip_str_dest, conn.rem_port, conn.state);
+        printf("Local: %s:%u -> Remote: %s:%u (State: 0x%X)\n", ip_str,
+               conn.local_port, ip_str_dest, conn.rem_port, conn.state);
       }
     }
   }
