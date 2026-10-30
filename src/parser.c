@@ -39,6 +39,7 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
   if (fp == NULL) {
     perror("Failed to open /proc/net/tcp");
     return -1;
+    //
   }
 
   char *line = NULL;
