@@ -77,21 +77,23 @@ int main(int argc, char *argv[]) {
          * utilities.
          */
         struct in_addr addr;
+        struct in_addr addr_dest;
         char ip_str[INET_ADDRSTRLEN]; /* 16-byte buffer for IPv4 dotted-decimal
                                          string */
-
+        char ip_str_dest[INET_ADDRSTRLEN];
         addr.s_addr = conn.local_ip_hex;
-
+        addr_dest.s_addr = conn.rem_ip_hex;
         /*
          * inet_ntop (Network to Presentation): converts the 32-bit binary
          * address to a standard null-terminated dotted-decimal string
          * ("xxx.xxx.xxx.xxx").
          */
         inet_ntop(AF_INET, &addr, ip_str, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &addr_dest, ip_str_dest, INET_ADDRSTRLEN);
 
         /* Print the connection details */
-        printf("Local: %s:%u -> Remote Port: %u (State: 0x%X)\n", ip_str,
-               conn.local_port, conn.rem_port, conn.state);
+        printf("Local: %s:%u -> Remote IP: %s Remote Port: %u (State: 0x%X)\n",
+               ip_str, conn.local_port, ip_str_dest, conn.rem_port, conn.state);
       }
     }
   }
