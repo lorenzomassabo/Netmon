@@ -1,8 +1,12 @@
 #include "../include/function.h"
 #include <arpa/inet.h>
+#include <ctype.h>  /* isdigit() */
+#include <dirent.h> /* opendir(), readdir(), closedir(), DIR, struct dirent */
 #include <netinet/in.h>
 #include <stdint.h>
+#include <string.h> /* strncmp(), strlen() */
 #include <sys/socket.h>
+#include <unistd.h> /* readlink() */
 
 /*
  * Translates numeric TCP states into standard human-readable labels.
@@ -38,6 +42,8 @@ const char *tcp_state_to_str(uint32_t state) {
     return "UNKNOWN";
   }
 }
+
+void resolve_process_info(struct TcpConnection *conn) {}
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
   FILE *fp = fopen("/proc/net/tcp", "r");

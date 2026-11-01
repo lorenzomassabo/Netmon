@@ -20,15 +20,27 @@ static void handle_sigint(int sig) {
 int main(void) {
 
   struct sigaction sa;
+
+  // This function will be executed when the program receives SIGINT (Ctrl+C).
   sa.sa_handler = handle_sigint;
+
+  // Initialize an empty signal mask.
+  // No additional signals will be blocked while the signal handler executes.
   sigemptyset(&sa.sa_mask);
+
+  // Set signal handling flags to 0.
+  // This means no additional options are enabled.
   sa.sa_flags = 0;
+
+  // Register the signal handler for SIGINT.
+  // Returns -1 if the operation fails.
   if (sigaction(SIGINT, &sa, NULL) == -1) {
     perror("sigaction");
     return EXIT_FAILURE;
   }
 
   struct TcpConnection conns[MAX_CONNECTIONS];
+
   /* Configure sleep duration: 1 second, 0 nanoseconds */
   struct timespec req = {.tv_sec = 1, .tv_nsec = 0};
   while (keep_running) {
@@ -37,7 +49,7 @@ int main(void) {
       fprintf(stderr, "Error while reading TCP connections\n");
       return EXIT_FAILURE;
     }
-    printf("\033[H\033[J");
+    printf("\033[H\033[J"); // clear the terminal
     printf("Active TCP connections found: %d\n\n", count);
     /*
      * Format header columns:
@@ -62,7 +74,6 @@ int main(void) {
        */
       snprintf(rem_buf, sizeof(rem_buf), "%s:%u", conns[i].rem_ip,
                conns[i].rem_port);
-
       /*
        * Output formatted connection record to standard output.
        * State is converted from raw numeric code to a descriptive string via

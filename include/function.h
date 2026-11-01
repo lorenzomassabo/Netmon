@@ -10,7 +10,7 @@
 #include <stdio.h>      /* fopen(), getline(), sscanf(), printf(), perror() */
 #include <stdlib.h>     /* free(), EXIT_SUCCESS */
 #include <sys/socket.h> /* Socket domain constants */
-#include <sys/types.h>
+#include <sys/types.h>  /* For pid_t */
 
 struct TcpConnection {
   char local_ip[INET_ADDRSTRLEN]; /* Buffer to hold formatted dotted-decimal
@@ -24,6 +24,10 @@ struct TcpConnection {
   pid_t pid;
   char process_name[64];
 };
+
+/* Resolve PID and process name by matching socket inode against /proc/[pid]/fd
+ * entries */
+void resolve_process_info(struct TcpConnection *conn);
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items);
 
