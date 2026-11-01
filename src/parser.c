@@ -60,12 +60,14 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
       uint32_t loc_hex, rem_hex;
       uint32_t loc_port, rem_port;
       uint32_t state;
+      long unsigned inode;
 
       /* Parsing of /proc/net/tcp parameters */
-      int parsed = sscanf(line, "%*d: %X:%X %X:%X %X", &loc_hex, &loc_port,
-                          &rem_hex, &rem_port, &state);
+      int parsed =
+          sscanf(line, "%*d: %X:%X %X:%X %X %*X:%*X %*X:%*X %*X %*d %*d %lu",
+                 &loc_hex, &loc_port, &rem_hex, &rem_port, &state, &inode);
 
-      if (parsed == 5) {
+      if (parsed == 6) {
         struct in_addr addr_loc = {.s_addr = loc_hex};
         struct in_addr addr_rem = {.s_addr = rem_hex};
 
@@ -79,6 +81,7 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
         list[count].local_port = (uint16_t)loc_port;
         list[count].rem_port = (uint16_t)rem_port;
         list[count].state = state;
+        list[count].inode = inode;
 
         count++;
       }

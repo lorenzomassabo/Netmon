@@ -20,6 +20,9 @@ struct TcpConnection {
                                    string */
   uint16_t rem_port;
   uint32_t state;
+  unsigned long inode;
+  pid_t pid;
+  char process_name[64];
 };
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items);

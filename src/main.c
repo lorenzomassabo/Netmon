@@ -44,8 +44,10 @@ int main(void) {
      * %-22s: Left-aligned string with a fixed field width of 22 characters
      * %-12s: Left-aligned string with a fixed field width of 12 characters
      */
-    printf("%-20s %-20s %-12s\n", "LOCAL ENDPORT", "REMOTE ENDPOINT", "STATE");
-    printf("------------------------------------------------------------\n");
+    printf("%-20s %-20s %-19s %s\n", "LOCAL ENDPORT", "REMOTE ENDPOINT",
+           "STATE", "INODE");
+    printf("-------------------------------------------------------------------"
+           "-\n");
 
     for (int i = 0; i < count; ++i) {
       /* Intermediate formatting buffers to hold combined "IP:PORT" strings */
@@ -66,8 +68,9 @@ int main(void) {
        * State is converted from raw numeric code to a descriptive string via
        * tcp_state_to_str().
        */
-      printf("%-20s %-20s %s\n", local_buf, rem_buf,
+      printf("%-20s %-20s %-20s", local_buf, rem_buf,
              tcp_state_to_str(conns[i].state));
+      printf("%-20lu\n", conns[i].inode);
     }
     /*
      * Suspend process execution for the duration specified in req.
