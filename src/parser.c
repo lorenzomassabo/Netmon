@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <sys/socket.h>
 
+/*
+ * Translates numeric TCP states into standard human-readable labels.
+ */
+
 const char *tcp_state_to_str(uint32_t state) {
   switch (state) {
   case 0x01:
@@ -43,16 +47,21 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
     //
   }
 
-  char *line = NULL;
-  size_t len = 0;
-  size_t count = 0;
+  char *line = NULL; /* Buffer managed by getline(); initialized to NULL for
+                        automatic malloc */
+  size_t len = 0;    /* Allocated buffer capacity */
+  size_t count = 0;  /* Number of valid connections successfully parsed */
 
+  /* Skip the first line containing table column headers */
   if (getline(&line, &len, fp) != -1) {
+    /* Read subsequent lines until EOF or until the output array capacity is
+     * reached */
     while (getline(&line, &len, fp) != -1 && count < max_items) {
       uint32_t loc_hex, rem_hex;
       uint32_t loc_port, rem_port;
       uint32_t state;
 
+      /* Parsing of /proc/net/tcp parameters */
       int parsed = sscanf(line, "%*d: %X:%X %X:%X %X", &loc_hex, &loc_port,
                           &rem_hex, &rem_port, &state);
 
