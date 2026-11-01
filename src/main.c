@@ -1,4 +1,5 @@
 #include "../include/function.h"
+#include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,14 +8,33 @@
 /* Maximum capacity of the connection buffer allocated on the stack */
 #define MAX_CONNECTIONS 128
 
+/* Volatile atomic flag to guarantee safe modification from signal handlers */
+static volatile sig_atomic_t keep_running = 1;
+
+/* Signal handler for graceful termination on SIGINT (Ctrl+C) */
+static void handle_sigint(int sig) {
+  (void)sig;
+  keep_running = 0;
+}
+
 int main(void) {
+
+  struct sigaction sa;
+  sa.sa_handler = handle_sigint;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  if (sigaction(SIGINT, &sa, NULL) == -1) {
+    perror("sigaction");
+    return EXIT_FAILURE;
+  }
+
   struct TcpConnection conns[MAX_CONNECTIONS];
   /* Configure sleep duration: 1 second, 0 nanoseconds */
   struct timespec req = {.tv_sec = 1, .tv_nsec = 0};
-  while (1) {
+  while (keep_running) {
     int count = fetch_tcp_connections(conns, MAX_CONNECTIONS);
     if (count < 0) {
-      fprintf(stderr, "Error wihle reading TCP connections\n");
+      fprintf(stderr, "Error while reading TCP connections\n");
       return EXIT_FAILURE;
     }
     printf("\033[H\033[J");
@@ -56,5 +76,6 @@ int main(void) {
      */
     nanosleep(&req, NULL);
   }
+  printf("\nExiting cleanly...\n");
   return EXIT_SUCCESS;
 }
