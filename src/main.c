@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 /* Maximum capacity of the connection buffer allocated on the stack */
 #define MAX_CONNECTIONS 128
@@ -47,7 +46,8 @@ int main(void) {
        * State is converted from raw numeric code to a descriptive string via
        * tcp_state_to_str().
        */
-      printf("%-20s %-20s 0x%02X\n", local_buf, rem_buf, conns[i].state);
+      printf("%-20s %-20s %s\n", local_buf, rem_buf,
+             tcp_state_to_str(conns[i].state));
     }
     /*
      * Suspend process execution for the duration specified in req.

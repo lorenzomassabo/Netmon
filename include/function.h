@@ -24,4 +24,6 @@ struct TcpConnection {
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items);
 
+const char *tcp_state_to_str(uint32_t state);
+
 #endif // !FUNCTION_H
