@@ -4,7 +4,7 @@ LDFLAGS =
 
 TARGET = netmon
 
-SRCS = src/main.c src/function.c
+SRCS = src/main.c src/parser.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)

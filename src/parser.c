@@ -1,5 +1,6 @@
 #include "../include/function.h"
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdint.h>
 #include <sys/socket.h>
 
@@ -45,7 +46,6 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
   char *line = NULL;
   size_t len = 0;
   size_t count = 0;
-  struct TcpConnection conn;
 
   if (getline(&line, &len, fp) != -1) {
     while (getline(&line, &len, fp) != -1 && count < max_items) {
@@ -57,17 +57,26 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
                           &rem_hex, &rem_port, &state);
 
       if (parsed == 5) {
-        struct in_addr addr_loc = {.s_addr = loc_hex}; // local ip
+        struct in_addr addr_loc = {.s_addr = loc_hex};
         struct in_addr addr_rem = {.s_addr = rem_hex};
 
+        /* Convert IP addresses to dotted-decimal strings */
         inet_ntop(AF_INET, &addr_loc, list[count].local_ip,
                   sizeof(list[count].local_ip));
+        inet_ntop(AF_INET, &addr_rem, list[count].rem_ip,
+                  sizeof(list[count].rem_ip));
+
+        /* Assign ports and connection state */
+        list[count].local_port = (uint16_t)loc_port;
+        list[count].rem_port = (uint16_t)rem_port;
+        list[count].state = state;
+
+        count++;
       }
     }
-
-    /* Release allocated system resources */
-    free(line); /* Free the buffer managed internally by getline() */
-    fclose(fp); /* Close the open file descriptor */
   }
+  /* Release allocated system resources */
+  free(line); /* Free the buffer managed internally by getline() */
+  fclose(fp); /* Close the open file descriptor */
   return (int)count;
 }
