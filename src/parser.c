@@ -1,6 +1,5 @@
 #include "../include/function.h"
 #include <arpa/inet.h>
-#include <cstdio>
 #include <ctype.h>  /* isdigit() */
 #include <dirent.h> /* opendir(), readdir(), closedir(), DIR, struct dirent */
 #include <netinet/in.h>
