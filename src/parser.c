@@ -43,6 +43,23 @@ const char *tcp_state_to_str(uint32_t state) {
   }
 }
 
+static int is_pid_dir(const char *name) {
+  if (*name == '\0') {
+    return 0;
+  }
+  // Iterate through the string until the null terminator ('\0') is reached.
+  // *name checks the current character, while name++ moves the pointer to the
+  // next character.
+  for (; *name; ++name) {
+    if (!isdigit((unsigned char)*name)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static void get_process_name(pid_t pid, char *dest, size_t max_len) {}
+
 void resolve_process_info(struct TcpConnection *conn) {}
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
