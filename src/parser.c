@@ -1,9 +1,12 @@
 #include "../include/function.h"
 #include <arpa/inet.h>
+#include <cstdio>
 #include <ctype.h>  /* isdigit() */
 #include <dirent.h> /* opendir(), readdir(), closedir(), DIR, struct dirent */
 #include <netinet/in.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h> /* strncmp(), strlen() */
 #include <sys/socket.h>
 #include <unistd.h> /* readlink() */
@@ -58,7 +61,32 @@ static int is_pid_dir(const char *name) {
   return 1;
 }
 
-static void get_process_name(pid_t pid, char *dest, size_t max_len) {}
+static void get_process_name(pid_t pid, char *dest, size_t max_len) {
+  char comm_path[64];
+
+  snprintf(comm_path, sizeof(comm_path), "/proc/%d/comm", pid);
+
+  FILE *fp = fopen(comm_path, "r");
+  if (fp == NULL) {
+    // If opening fails, stores "-" in dest
+    snprintf(dest, max_len, "-");
+    return;
+  }
+
+  // Reads the process name from the file and stores it in dest
+  if (fgets(dest, (int)max_len, fp) != NULL) {
+    /* Strip trailing newline character stored by the kernel */
+    size_t len = strlen(dest);
+    // Checks if the last character is a newline
+    if (len > 0 && dest[len - 1] == '\n') {
+      // Replaces the newline with the string terminator
+      dest[len - 1] = '\0';
+    }
+  } else {
+    snprintf(dest, max_len, "-");
+  }
+  fclose(fp);
+}
 
 void resolve_process_info(struct TcpConnection *conn) {}
 
