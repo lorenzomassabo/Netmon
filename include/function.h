@@ -25,6 +25,12 @@ struct TcpConnection {
   char process_name[64];
 };
 
+// Check wheather a dir name consists solely of numeri digits (indicating a PID)
+static int is_pid_dir();
+
+// Reads the process executable name from /proc/<pid>/comm
+static void get_process_name();
+
 /* Resolve PID and process name by matching socket inode against /proc/[pid]/fd
  * entries */
 void resolve_process_info(struct TcpConnection *conn);

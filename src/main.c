@@ -18,7 +18,6 @@ static void handle_sigint(int sig) {
 }
 
 int main(void) {
-
   struct sigaction sa;
 
   // This function will be executed when the program receives SIGINT (Ctrl+C).
