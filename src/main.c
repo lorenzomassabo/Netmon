@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-// prova
-
 /* Maximum capacity of the connection buffer allocated on the stack */
 #define MAX_CONNECTIONS 128
 
