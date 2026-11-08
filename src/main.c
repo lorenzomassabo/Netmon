@@ -17,6 +17,7 @@ static void handle_sigint(int sig) {
   keep_running = 0;
 }
 
+static void handle_sigint(int sig);
 int main(void) {
   struct sigaction sa;
 
