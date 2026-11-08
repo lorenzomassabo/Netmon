@@ -89,67 +89,91 @@ static void get_process_name(pid_t pid, char *dest, size_t max_len) {
   fclose(fp);
 }
 
+/*
+ * Scansiona il filesystem virtuale /proc per associare l'inode di un socket
+ * al PID e al nome del processo proprietario.
+ */
 void resolve_process_info(struct TcpConnection *conn) {
+  // 1. Inizializzazione dei valori di fallback (nessun processo trovato)
   conn->pid = -1;
   snprintf(conn->process_name, sizeof(conn->process_name), "-");
 
+  // Se l'inode non è valido, interrompe subito la ricerca
   if (conn->inode == 0) {
     return;
   }
 
+  // 2. Apertura della directory principale /proc
   DIR *proc_dir = opendir("/proc");
   if (proc_dir == NULL) {
     return;
   }
 
   struct dirent *proc_entry;
-  int found = 0;
+  int found = 0; // Flag di controllo per interrompere la ricerca al primo match
 
+  // 3. Iterazione su tutte le voci presenti in /proc
   while ((proc_entry = readdir(proc_dir)) != NULL && !found) {
+    // Filtra solo le cartelle i cui nomi sono numerici (ovvero i PID)
     if (!is_pid_dir(proc_entry->d_name)) {
       continue;
     }
 
     pid_t current_pid = (pid_t)atoi(proc_entry->d_name);
     char fd_dir_path[280];
+
+    // Costruisce il percorso della cartella dei file descriptor: /proc/[pid]/fd
     snprintf(fd_dir_path, sizeof(fd_dir_path), "/proc/%s/fd",
              proc_entry->d_name);
 
+    // 4. Apertura della cartella fd/ del processo corrente
     DIR *fd_dir = opendir(fd_dir_path);
     if (fd_dir == NULL) {
+      // Normale se il processo appartiene a un altro utente e mancano i
+      // permessi (EACCES)
       continue;
     }
 
     struct dirent *fd_entry;
+    // 5. Scansione dei file descriptor aperti dal processo
     while ((fd_entry = readdir(fd_dir)) != NULL) {
+      // Salta le directory speciali '.' e '..'
       if (fd_entry->d_name[0] == '.') {
         continue;
       }
 
       char link_path[576];
+      // Compone il percorso completo del symlink del descrittore
       snprintf(link_path, sizeof(link_path), "%s/%s", fd_dir_path,
                fd_entry->d_name);
 
       char target[128];
+      // Legge la destinazione del link simbolico (es. "socket:[12345]")
       ssize_t len = readlink(link_path, target, sizeof(target) - 1);
       if (len != -1) {
-        target[len] = '\0';
+        target[len] = '\0'; // Aggiunge manualmente il terminatore nullo
 
         unsigned long link_inode = 0;
+        // Estrae il numero di inode dalla stringa formattata del kernel
         if (sscanf(target, "socket:[%lu]", &link_inode) == 1) {
+          // 6. Confronto dell'inode: se corrisponde, abbiamo trovato il
+          // proprietario
           if (link_inode == conn->inode) {
             conn->pid = current_pid;
+            // Recupera il nome leggibile del programma da /proc/[pid]/comm
             get_process_name(current_pid, conn->process_name,
                              sizeof(conn->process_name));
-            found = 1;
+            found = 1; // Segna il match per uscire dai cicli
             break;
           }
         }
       }
     }
+    // Chiude il descrittore della cartella fd/ per evitare leak di risorse
     closedir(fd_dir);
   }
 
+  // Chiude la cartella principale /proc
   closedir(proc_dir);
 }
 
