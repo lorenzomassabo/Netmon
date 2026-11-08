@@ -17,23 +17,13 @@ static void handle_sigint(int sig) {
   keep_running = 0;
 }
 
-static void handle_sigint(int sig);
 int main(void) {
   struct sigaction sa;
 
-  // This function will be executed when the program receives SIGINT (Ctrl+C).
   sa.sa_handler = handle_sigint;
-
-  // Initialize an empty signal mask.
-  // No additional signals will be blocked while the signal handler executes.
   sigemptyset(&sa.sa_mask);
-
-  // Set signal handling flags to 0.
-  // This means no additional options are enabled.
   sa.sa_flags = 0;
 
-  // Register the signal handler for SIGINT.
-  // Returns -1 if the operation fails.
   if (sigaction(SIGINT, &sa, NULL) == -1) {
     perror("sigaction");
     return EXIT_FAILURE;
@@ -51,20 +41,18 @@ int main(void) {
     }
     printf("\033[H\033[J"); // clear the terminal
     printf("Active TCP connections found: %d\n\n", count);
-    /*
-     * Format header columns:
-     * %-22s: Left-aligned string with a fixed field width of 22 characters
-     * %-12s: Left-aligned string with a fixed field width of 12 characters
-     */
-    printf("%-20s %-20s %-19s %s\n", "LOCAL ENDPORT", "REMOTE ENDPOINT",
-           "STATE", "INODE");
+
+    /* Format header columns with fixed widths for clean alignment */
+    printf("%-24s %-24s %-14s %-24s\n", "LOCAL ENDPOINT", "REMOTE ENDPOINT",
+           "STATE", "PROGRAM (PID)");
     printf("-------------------------------------------------------------------"
-           "-\n");
+           "----------------\n");
 
     for (int i = 0; i < count; ++i) {
-      /* Intermediate formatting buffers to hold combined "IP:PORT" strings */
+      /* Intermediate formatting buffers to hold combined strings */
       char local_buf[32];
       char rem_buf[32];
+      char proc_buf[48];
 
       /* Format local endpoint combining dotted-decimal IP and host-order port
        */
@@ -74,14 +62,18 @@ int main(void) {
        */
       snprintf(rem_buf, sizeof(rem_buf), "%s:%u", conns[i].rem_ip,
                conns[i].rem_port);
-      /*
-       * Output formatted connection record to standard output.
-       * State is converted from raw numeric code to a descriptive string via
-       * tcp_state_to_str().
-       */
-      printf("%-20s %-20s %-20s", local_buf, rem_buf,
-             tcp_state_to_str(conns[i].state));
-      printf("%-20lu\n", conns[i].inode);
+
+      /* Format program name and PID into a single clean string */
+      if (conns[i].pid != -1) {
+        snprintf(proc_buf, sizeof(proc_buf), "%s (%d)", conns[i].process_name,
+                 conns[i].pid);
+      } else {
+        snprintf(proc_buf, sizeof(proc_buf), "-");
+      }
+
+      /* Output formatted connection record to standard output */
+      printf("%-24s %-24s %-14s %-24s\n", local_buf, rem_buf,
+             tcp_state_to_str(conns[i].state), proc_buf);
     }
     /*
      * Suspend process execution for the duration specified in req.

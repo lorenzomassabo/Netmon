@@ -6,8 +6,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h> /* strncmp(), strlen() */
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h> /* readlink() */
 
 /*
@@ -87,7 +89,69 @@ static void get_process_name(pid_t pid, char *dest, size_t max_len) {
   fclose(fp);
 }
 
-void resolve_process_info(struct TcpConnection *conn) {}
+void resolve_process_info(struct TcpConnection *conn) {
+  conn->pid = -1;
+  snprintf(conn->process_name, sizeof(conn->process_name), "-");
+
+  if (conn->inode == 0) {
+    return;
+  }
+
+  DIR *proc_dir = opendir("/proc");
+  if (proc_dir == NULL) {
+    return;
+  }
+
+  struct dirent *proc_entry;
+  int found = 0;
+
+  while ((proc_entry = readdir(proc_dir)) != NULL && !found) {
+    if (!is_pid_dir(proc_entry->d_name)) {
+      continue;
+    }
+
+    pid_t current_pid = (pid_t)atoi(proc_entry->d_name);
+    char fd_dir_path[280];
+    snprintf(fd_dir_path, sizeof(fd_dir_path), "/proc/%s/fd",
+             proc_entry->d_name);
+
+    DIR *fd_dir = opendir(fd_dir_path);
+    if (fd_dir == NULL) {
+      continue;
+    }
+
+    struct dirent *fd_entry;
+    while ((fd_entry = readdir(fd_dir)) != NULL) {
+      if (fd_entry->d_name[0] == '.') {
+        continue;
+      }
+
+      char link_path[576];
+      snprintf(link_path, sizeof(link_path), "%s/%s", fd_dir_path,
+               fd_entry->d_name);
+
+      char target[128];
+      ssize_t len = readlink(link_path, target, sizeof(target) - 1);
+      if (len != -1) {
+        target[len] = '\0';
+
+        unsigned long link_inode = 0;
+        if (sscanf(target, "socket:[%lu]", &link_inode) == 1) {
+          if (link_inode == conn->inode) {
+            conn->pid = current_pid;
+            get_process_name(current_pid, conn->process_name,
+                             sizeof(conn->process_name));
+            found = 1;
+            break;
+          }
+        }
+      }
+    }
+    closedir(fd_dir);
+  }
+
+  closedir(proc_dir);
+}
 
 int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
   FILE *fp = fopen("/proc/net/tcp", "r");
@@ -131,6 +195,7 @@ int fetch_tcp_connections(struct TcpConnection *list, size_t max_items) {
         list[count].rem_port = (uint16_t)rem_port;
         list[count].state = state;
         list[count].inode = inode;
+        resolve_process_info(&list[count]); // Risolve PID e nome processo
 
         count++;
       }
