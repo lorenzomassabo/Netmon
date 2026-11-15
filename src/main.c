@@ -56,6 +56,8 @@ int main(int argc, char* argv[]) {
             char rem_buf[32];
             char proc_buf[48];
 
+            if (arguments.p_state != NULL) {
+            }
             /* Format local endpoint combining dotted-decimal IP and host-order port
              */
             snprintf(local_buf, sizeof(local_buf), "%s:%u", conns[i].local_ip, conns[i].local_port);
