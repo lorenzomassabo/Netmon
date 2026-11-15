@@ -27,8 +27,8 @@ struct TcpConnection {
 
 /* struct per gestire gli argument extra */
 struct NetmonArg {
-    char* name;
-    char* state;
+    char* p_name;
+    char* p_state;
     int help;
 };
 

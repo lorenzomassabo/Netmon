@@ -50,18 +50,18 @@ const char* tcp_state_to_str(uint32_t state) {
 
 /* gestione degli argomenti */
 void parseArguments(int argc, char* argv[], struct NetmonArg* config) {
-    config->state = NULL;
-    config->name = NULL;
+    config->p_state = NULL;
+    config->p_name = NULL;
     config->help = 0;
 
     int opt;
     while ((opt = getopt(argc, argv, "s:p:h")) != -1) {
         switch (opt) {
         case 's':
-            config->state = optarg;
+            config->p_state = optarg;
             break;
         case 'p':
-            config->name = optarg;
+            config->p_name = optarg;
             break;
         case 'h':
             config->help = 1;
