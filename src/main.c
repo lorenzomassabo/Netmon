@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include <time.h>
 
 /* Maximum capacity of the connection buffer allocated on the stack */
@@ -71,7 +73,19 @@ int main(int argc, char* argv[]) {
                 snprintf(proc_buf, sizeof(proc_buf), "-");
             }
 
-            /* Output formatted connection record to standard output */
+            /* check if there's a valid process with the specified state */
+            if (arguments.p_state != NULL) {
+                if (strcasecmp(tcp_state_to_str(conns[i].state), arguments.p_state) != 0) {
+                    continue; /* filters are ignored if the users do not specify any argument */
+                }
+            }
+
+            /* check if there's a valid process with the specified name */
+            if (arguments.p_name != NULL) {
+                if (strstr(conns[i].process_name, arguments.p_name) == NULL) {
+                    continue;
+                }
+            }
             printf("%-24s %-24s %-14s %-24s\n", local_buf, rem_buf,
                    tcp_state_to_str(conns[i].state), proc_buf);
         }
