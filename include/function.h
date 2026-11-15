@@ -13,30 +13,37 @@
 #include <sys/types.h>  /* For pid_t */
 
 struct TcpConnection {
-  char local_ip[INET_ADDRSTRLEN]; /* Buffer to hold formatted dotted-decimal
-                                     IPv4 string */
-  uint16_t local_port;
-  char rem_ip[INET_ADDRSTRLEN]; /* Buffer to hold formatted dotted-decimal IPv4
-                                   string */
-  uint16_t rem_port;
-  uint32_t state;
-  unsigned long inode;
-  pid_t pid;
-  char process_name[64];
+    char local_ip[INET_ADDRSTRLEN]; /* Buffer to hold formatted dotted-decimal
+                                       IPv4 string */
+    uint16_t local_port;
+    char rem_ip[INET_ADDRSTRLEN]; /* Buffer to hold formatted dotted-decimal IPv4
+                                     string */
+    uint16_t rem_port;
+    uint32_t state;
+    unsigned long inode;
+    pid_t pid;
+    char process_name[64];
+};
+
+/* struct per gestire gli argument extra */
+struct NetmonArg {
+    char* name;
+    char* state;
+    int help;
 };
 
 // Check wheather a dir name consists solely of numeri digits (indicating a PID)
-static int is_pid_dir(const char *name);
+static int is_pid_dir(const char* name);
 
 // Reads the process executable name from /proc/<pid>/comm
-static void get_process_name(pid_t pid, char *dest, size_t max_len);
+static void get_process_name(pid_t pid, char* dest, size_t max_len);
 
 /* Resolve PID and process name by matching socket inode against /proc/[pid]/fd
  * entries */
-void resolve_process_info(struct TcpConnection *conn);
+void resolve_process_info(struct TcpConnection* conn);
 
-int fetch_tcp_connections(struct TcpConnection *list, size_t max_items);
+int fetch_tcp_connections(struct TcpConnection* list, size_t max_items);
 
-const char *tcp_state_to_str(uint32_t state);
+const char* tcp_state_to_str(uint32_t state);
 
 #endif // !FUNCTION_H
