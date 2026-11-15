@@ -1,5 +1,6 @@
 #include "../include/function.h"
 #include <arpa/inet.h>
+#include <bits/getopt_core.h>
 #include <ctype.h>  /* isdigit() */
 #include <dirent.h> /* opendir(), readdir(), closedir(), DIR, struct dirent */
 #include <netinet/in.h>
@@ -44,6 +45,38 @@ const char* tcp_state_to_str(uint32_t state) {
         return "NEW_SYNC_RECV";
     default:
         return "UNKNOWN";
+    }
+}
+
+void parseArguments(int argc, char* argv[], struct NetmonArg* config) {
+    config->state = NULL;
+    config->name = NULL;
+    config->help = 0;
+
+    int opt;
+    while ((opt = getopt(argc, argv, "s:p:h")) != -1) {
+        switch (opt) {
+        case 's':
+            config->state = optarg;
+            break;
+        case 'p':
+            config->name = optarg;
+            break;
+        case 'h':
+            config->help = 1;
+            break;
+        default:
+            fprintf(stderr, "Uso: %s [-s STATE] [-p PROCESS] [-h]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+        // Se l'utente ha richiesto l'help, mostra le istruzioni e termina
+        if (config->help) {
+            printf("Utilizzo di netmon:\n");
+            printf("  -s <stato>     Filtra per stato TCP (es. ESTABLISHED, LISTEN)\n");
+            printf("  -p <processo>  Filtra per nome del processo (es. firefox)\n");
+            printf("  -h             Mostra questo messaggio di aiuto\n");
+            exit(EXIT_SUCCESS);
+        }
     }
 }
 

@@ -32,6 +32,8 @@ struct NetmonArg {
     int help;
 };
 
+/* funzione per la getsione degli argomenti */
+void parseArguments(int argc, char* argv[], struct NetmonArg* config);
 // Check wheather a dir name consists solely of numeri digits (indicating a PID)
 static int is_pid_dir(const char* name);
 

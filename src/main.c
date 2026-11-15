@@ -17,7 +17,8 @@ static void handle_sigint(int sig) {
     keep_running = 0;
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
+    struct NetmonArg arguments;
     struct sigaction sa;
 
     sa.sa_handler = handle_sigint;
@@ -28,6 +29,7 @@ int main(void) {
         perror("sigaction");
         return EXIT_FAILURE;
     }
+    parseArguments(argc, argv, &arguments);
 
     struct TcpConnection conns[MAX_CONNECTIONS];
 
