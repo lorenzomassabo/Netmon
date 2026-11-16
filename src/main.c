@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <strings.h>
 #include <time.h>
 
@@ -43,52 +42,10 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "Error while reading TCP connections\n");
             return EXIT_FAILURE;
         }
-        printf("\033[H\033[J"); // clear the terminal
-        printf("Active TCP connections found: %d\n\n", count);
 
-        /* Format header columns with fixed widths for clean alignment */
-        printf("%-24s %-24s %-14s %-24s\n", "LOCAL ENDPOINT", "REMOTE ENDPOINT", "STATE",
-               "PROGRAM (PID)");
-        printf("-------------------------------------------------------------------"
-               "----------------\n");
+        // Print processes
+        printConnections(conns, count, &arguments);
 
-        for (int i = 0; i < count; ++i) {
-            /* Intermediate formatting buffers to hold combined strings */
-            char local_buf[32];
-            char rem_buf[32];
-            char proc_buf[48];
-
-            /* Format local endpoint combining dotted-decimal IP and host-order port
-             */
-            snprintf(local_buf, sizeof(local_buf), "%s:%u", conns[i].local_ip, conns[i].local_port);
-            /* Format remote endpoint combining dotted-decimal IP and host-order port
-             */
-            snprintf(rem_buf, sizeof(rem_buf), "%s:%u", conns[i].rem_ip, conns[i].rem_port);
-
-            /* Format program name and PID into a single clean string */
-            if (conns[i].pid != -1) {
-                snprintf(proc_buf, sizeof(proc_buf), "%s (%d)", conns[i].process_name,
-                         conns[i].pid);
-            } else {
-                snprintf(proc_buf, sizeof(proc_buf), "-");
-            }
-
-            /* check if there's a valid process with the specified state */
-            if (arguments.p_state != NULL) {
-                if (strcasecmp(tcp_state_to_str(conns[i].state), arguments.p_state) != 0) {
-                    continue; /* filters are ignored if the users do not specify any argument */
-                }
-            }
-
-            /* check if there's a valid process with the specified name */
-            if (arguments.p_name != NULL) {
-                if (strstr(conns[i].process_name, arguments.p_name) == NULL) {
-                    continue;
-                }
-            }
-            printf("%-24s %-24s %-14s %-24s\n", local_buf, rem_buf,
-                   tcp_state_to_str(conns[i].state), proc_buf);
-        }
         /*
          * Suspend process execution for the duration specified in req.
          * Passing NULL as the second argument ignores any remaining time if
